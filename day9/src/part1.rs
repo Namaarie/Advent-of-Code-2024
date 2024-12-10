@@ -1,19 +1,22 @@
 use std::fs::*;
 
-enum BlockType {
+pub enum BlockType {
     FREE,
     FILE,
 }
 
 #[allow(unused)]
 pub fn print_blocks(blocks: &Vec<Option<u32>>) {
-    let str = blocks.iter().map(|o| {
-        if let Some(c) = o {
-            c.to_string()
-        } else {
-            ".".to_string()
-        }
-    }).collect::<String>();
+    let str = blocks
+        .iter()
+        .map(|o| {
+            if let Some(c) = o {
+                c.to_string()
+            } else {
+                ".".to_string()
+            }
+        })
+        .collect::<String>();
     println!("{}", str);
 }
 
@@ -28,14 +31,14 @@ pub fn main() {
             match block_type {
                 BlockType::FREE => blocks.push(None),
                 BlockType::FILE => blocks.push(Some(index)),
-            }            
+            }
         }
         match block_type {
             BlockType::FREE => block_type = BlockType::FILE,
             BlockType::FILE => {
                 block_type = BlockType::FREE;
                 index += 1;
-            },
+            }
         }
     }
 
@@ -57,7 +60,11 @@ pub fn main() {
         }
     }
 
-    let sum = blocks.iter().enumerate().map(|(i, o)| o.unwrap_or(0) as u64 * i as u64).sum::<u64>();
+    let sum = blocks
+        .iter()
+        .enumerate()
+        .map(|(i, o)| o.unwrap_or(0) as u64 * i as u64)
+        .sum::<u64>();
 
     println!("{}", sum);
 }

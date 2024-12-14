@@ -1,32 +1,29 @@
-use good_lp::{Solution, SolverModel, constraint, default_solver, variables};
 use regex::Regex;
 use std::fs::*;
 
-fn solve(c1: i32, c2: i32, c3: i32, c4: i32, k1: i32, k2: i32) -> Result<(i32, i32), ()> {
-    let mut result = (0, 0);
-    variables! {
-        vars:
-          0 <= a <= 100;
-          0 <= b <= 100;
-    }
-    let solution = vars
-        .minimise(3 * a + b)
-        .using(default_solver) // microlp
-        .with(constraint!(c1 * a + c3 * b == k1))
-        .with(constraint!(c2 * a + c4 * b == k2))
-        .solve();
+pub fn solve(m_i: (u64, u64, u64, u64), b_i: (u64, u64)) -> Option<(u64, u64)> {
+    // get f64 version of input
+    let m = (m_i.0 as f64, m_i.1 as f64, m_i.2 as f64, m_i.3 as f64);
+    let b = (b_i.0 as f64, b_i.1 as f64);
 
-    if let Ok(sol) = solution {
-        result.0 = sol.value(a).round() as i32;
-        result.1 = sol.value(b).round() as i32;
+    // solve Ax=b using inverse A*b
+    // invert 2x2 using determinant
+    let mut d = m.0 * m.3 - m.1 * m.2;
+    if d == 0.0 {
+        return None;
     } else {
-        return Err(());
+        d = 1.0 / d;
     }
 
-    if c1 * result.0 + c3 * result.1 == k1 && c2 * result.0 + c4 * result.1 == k2 {
-        Ok(result)
+    let inv = (m.3 * d, -m.1 * d, -m.2 * d, m.0 * d);
+    let x_f = (inv.0 * b.0 + inv.1 * b.1, inv.2 * b.0 + inv.3 * b.1);
+    let x_i = (x_f.0.round() as u64, x_f.1.round() as u64);
+
+    // check if vaid solution
+    if m_i.0 * x_i.0 + m_i.1 * x_i.1 == b_i.0 && m_i.2 * x_i.0 + m_i.3 * x_i.1 == b_i.1 {
+        return Some((x_i.0, x_i.1));
     } else {
-        Err(())
+        return None;
     }
 }
 
@@ -37,8 +34,8 @@ pub fn main() {
     let mut nums = Vec::new();
 
     for cap in re.captures_iter(&binding) {
-        let c1 = cap["c1"].parse::<i32>().unwrap();
-        let c2 = cap["c2"].parse::<i32>().unwrap();
+        let c1 = cap["c1"].parse::<u64>().unwrap();
+        let c2 = cap["c2"].parse::<u64>().unwrap();
 
         nums.push(c1);
         nums.push(c2);
@@ -54,7 +51,7 @@ pub fn main() {
         let c3 = nums.pop().unwrap();
         let c2 = nums.pop().unwrap();
         let c1 = nums.pop().unwrap();
-        if let Ok(solution) = solve(c1, c2, c3, c4, k1, k2) {
+        if let Some(solution) = solve((c1, c3, c2, c4), (k1, k2)) {
             minimum += solution.0 * 3 + solution.1;
             solutions.push(solution);
         }

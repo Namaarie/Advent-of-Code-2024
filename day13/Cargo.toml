@@ -1,0 +1,9 @@
+[package]
+name = "day13"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+good_lp = { version = "1.10.0", features = ["microlp"], default-features = false }
+regex = "1.11.1"
+
